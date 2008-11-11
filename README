@@ -1,0 +1,62 @@
+This is a mirror of http://www.vim.org/scripts/script.php?script_id=2436
+
+FuzzyJump is a Vim plugin to jump the cursor where you want like a pointing
+device such as a mouse.  This plugin maps most of keys on a keyboard to
+relative positions in the current buffer.  For example. if your screen looks
+like:
+
+mapping image of buffer and keyboard:
+http://farm4.static.flickr.com/3253/3021764786_5cf2efe7d5_o.png
+
+	+-----------------------------------------------------+
+	|if where git &>/dev/null; then                       |
+	|  function prompt-git-head-name() {                  |
+	|    if ! [ -d .git ]; then                           |
+	|      return 1                                       |
+	|    fi                                               |
+	|    local head_name                                  |
+	|    head_name="$(git branch | sed -e 's/^\* //;t;d')"|
+	|"foo.sh" [New file]                                  |
+	+-----------------------------------------------------+
+
+then the correspondences of keys and positions are as follow (where {X} means
+that key "X" is corresponding to the position where it is written).
+
+	+-----------------------------------------------------+
+	|{1}wh{2} g{3}&>{4}v/{5}l;{6}en{7}  {8}  {9}  {0}  {-}|
+	|  function prompt-git-head-name() {                  |
+	|{q} i{w} [{e} .{r} ]{t}he{y}  {u}  {i}  {o}  {p}  {@}|
+	|      return 1                                       |
+        |{a} f{s}  {d}  {f}  {g}  {h}  {j}  {k}  {l}  {;}  {:}|
+	|    local head_name                                  |
+	|{z} h{x}_n{c}="{v}it{b}an{n}| {m} -{,}s/{.} /{/};d{\}|
+	|"foo.sh" [New file]                                  |
+	+-----------------------------------------------------+
+
+By default, this plugin defined 2-stroke key mappings to jump to one of the
+above positions.  The key mappings consist of the common prefix ";" (which can
+be customized to any key sequence; see |<Plug>(fuzzyjump-prefix)|) and one of
+the above keys.  For example, if you type ";1", the cursor will move to the
+position near {1} in the above figure.  For some keys such as {9}, there is no
+text and it's not possible to move the cursor to the position, if so, this
+plugin moves the cursor to one of the most useful positions near the specified
+position.
+
+Note that the original author doesn't consider about keyboard layouts other
+than JIS layout.  So the above figure and the default key mappings are
+somewhat strange for non-Japanese users.
+http://en.wikipedia.org/wiki/Image:KB_Japanese.svg
+
+* I'm using japanese layout keyboard, so I don't know how does it work in other layout keyboard.
+
+Blog entry:
+[English] http://blog.endflow.net/?p=175〈=en
+[Japanese] http://blog.endflow.net/?p=175〈=ja
+
+Requirements:
+- Vim 7.1 or later
+
+Special thanks:
+-kana [http://whileimautomaton.net/]: bugfix & help file in 0.1.1
+
+
