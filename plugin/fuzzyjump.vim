@@ -1,68 +1,52 @@
-"=============================================================================
-" fuzzyjump.vim - Jump to there quickly!
-"=============================================================================
+" fuzzyjump - Jump to where you (almost) want
+" Version: 0.1.1
+" Originally written by:
+" 	Copyright (C) 2008 Yuki KODAMA <http://blog.endflow.net/>
+" Modified and the document written by:
+" 	Copyright (C) 2008 kana <http://whileimautomaton.net/>
+" License: MIT license  {{{
+"     Permission is hereby granted, free of charge, to any person obtaining
+"     a copy of this software and associated documentation files (the
+"     "Software"), to deal in the Software without restriction, including
+"     without limitation the rights to use, copy, modify, merge, publish,
+"     distribute, sublicense, and/or sell copies of the Software, and to
+"     permit persons to whom the Software is furnished to do so, subject to
+"     the following conditions:
 "
-" Author:  Yuki KODAMA [blog.endflow.net]
-" Version: 0.1.0, for Vim 7.1
-" Licence: MIT Licence
-" URL: 
+"     The above copyright notice and this permission notice shall be included
+"     in all copies or substantial portions of the Software.
+"
+"     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+"     OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+"     MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+"     IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+"     CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+"     TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+"     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+" }}}
 
 if exists('loaded_fuzzyjump') || v:version < 701
   finish
 endif
 let loaded_fuzzyjump = 1
 
-" Utility functions
 
-function! s:GetPos()
-  let pos = getpos('.')
-  return {'line':pos[1], 'col':pos[2], 'bufnum':pos[0], 'off':pos[3]}
-endfunction
 
-function! s:SetPos(pos)
-  call setpos('.', [a:pos.bufnum, a:pos.line, a:pos.col, a:pos.off])
-endfunction
 
-function! s:SavePos()
-  let s:save_pos_cursor = s:GetPos()
-  return s:save_pos_cursor
-endfunction
+" Variables  "{{{1
 
-function! s:RestorePos()
-  call s:SetPos(s:save_pos_cursor)
-  return s:save_pos_cursor
-endfunction
+"if !exists('g:FuzzyJump_RelativeJumpPrefix')
+"  let g:FuzzyJump_RelativeJumpPrefix = ';;'
+"endif
 
-function! s:GetScrollMetrics()
-  call s:SavePos()
-  let met = {}
-  execute printf('normal %s', g:FuzzyJump_MoveCursorToScrollTop)
-  let met['top'] = line('.')
-  execute printf('normal %s', g:FuzzyJump_MoveCursorToScrollBottom)
-  let met['bottom'] = line('.')
-  call s:RestorePos()
-  return met
-endfunction
+if !exists('g:FuzzyJump_Debug')
+  let g:FuzzyJump_Debug = 0
+endif
 
-function! s:Abs(n)
-  return a:n < 0 ? -1 * a:n : a:n
-endfunction
 
-function! s:NegIfOdd(n)
-  return a:n % 2 == 0 ? -1 * a:n : a:n
-endfunction
 
-function! s:Contains(min, n, max)
-  return a:min <= a:n && a:n <= a:max ? 1 : 0
-endfunction
 
-function! s:Msg(msg)
-  if g:FuzzyJump_Debug
-    call confirm(a:msg, '', '', '')
-  endif
-endfunction
-
-" FuzzyJump Core
+" Functions - Core  "{{{1
 
 function! s:FuzzyJumpTo(line, col)
   let M = 10
@@ -129,7 +113,10 @@ function! s:FuzzyJumpTo(line, col)
       \ , tgt.line, tgt.col, line('.'), col('.')))
 endfunction
 
-" KeyMapper object
+
+
+
+" Functions - KeyMapper  "{{{1
 
 let s:KeyMapper = {
   \ 'maps':{
@@ -141,52 +128,80 @@ let s:KeyMapper = {
 
 function! s:KeyMapper.map() dict
   for [key, pos] in items(self.maps)
-    execute printf('nnoremap <silent> %s%s :call <SID>FuzzyJumpTo(%s, %s)<CR>',
-        \ g:FuzzyJump_AbsoluteJumpPrefix, key, pos[0], pos[1])
+    execute printf('noremap <silent> <Plug>(fuzzyjump-prefix)%s :<C-u>call <SID>FuzzyJumpTo(%s, %s)<CR>',
+        \ key, pos[0], pos[1])
   endfor
-  execute printf('nnoremap <silent> %s <NOP>', g:FuzzyJump_AbsoluteJumpPrefix)
+  execute 'noremap <silent> <Plug>(fuzzyjump-prefix) <Nop>'
 endfunction
 
-function! s:KeyMapper.unmap() dict
-  for key in keys(self.maps)
-    execute printf('nunmap %s%s', g:FuzzyJump_AbsoluteJumpPrefix, key)
-  endfor
-  execute printf('nunmap %s', g:FuzzyJump_AbsoluteJumpPrefix)
+
+
+
+" Functions - Utilities  "{{{1
+
+function! s:GetPos()
+  let pos = getpos('.')
+  return {'line':pos[1], 'col':pos[2], 'bufnum':pos[0], 'off':pos[3]}
 endfunction
 
-" Global options
+function! s:SetPos(pos)
+  call setpos('.', [a:pos.bufnum, a:pos.line, a:pos.col, a:pos.off])
+endfunction
 
-if !exists('g:FuzzyJump_AutoStart')
-  let g:FuzzyJump_AutoStart = 1
+function! s:SavePos()
+  let s:save_pos_cursor = s:GetPos()
+  return s:save_pos_cursor
+endfunction
+
+function! s:RestorePos()
+  call s:SetPos(s:save_pos_cursor)
+  return s:save_pos_cursor
+endfunction
+
+function! s:GetScrollMetrics()
+  call s:SavePos()
+  let met = {}
+  normal! H
+  let met['top'] = line('.')
+  normal! L
+  let met['bottom'] = line('.')
+  call s:RestorePos()
+  return met
+endfunction
+
+function! s:Abs(n)
+  return a:n < 0 ? -1 * a:n : a:n
+endfunction
+
+function! s:NegIfOdd(n)
+  return a:n % 2 == 0 ? -1 * a:n : a:n
+endfunction
+
+function! s:Contains(min, n, max)
+  return a:min <= a:n && a:n <= a:max ? 1 : 0
+endfunction
+
+function! s:Msg(msg)
+  if g:FuzzyJump_Debug
+    call confirm(a:msg, '', '', '')
+  endif
+endfunction
+
+
+
+
+" Initialization  "{{{1
+
+call s:KeyMapper.map()
+
+if !(hasmapto('<Plug>(fuzzyjump-prefix)', 'n')
+\    || hasmapto('<Plug>(fuzzyjump-prefix)', 'v')
+\    || hasmapto('<Plug>(fuzzyjump-prefix)', 'o'))
+  map ;  <Plug>(fuzzyjump-prefix)
 endif
 
-if !exists('g:FuzzyJump_AbsoluteJumpPrefix')
-  let g:FuzzyJump_AbsoluteJumpPrefix = ';'
-endif
 
-"if !exists('g:FuzzyJump_RelativeJumpPrefix')
-"  let g:FuzzyJump_RelativeJumpPrefix = ';;'
-"endif
 
-if !exists('g:FuzzyJump_MoveCursorToScrollTop')
-  let g:FuzzyJump_MoveCursorToScrollTop = 'H'
-endif
 
-if !exists('g:FuzzyJump_MoveCursorToScrollBottom')
-  let g:FuzzyJump_MoveCursorToScrollBottom = 'L'
-endif
-
-if !exists('g:FuzzyJump_Debug')
-  let g:FuzzyJump_Debug = 0
-endif
-
-" Commands
-
-command! FuzzyJumpEnable call s:KeyMapper.map()
-command! FuzzyJumpDisable call s:KeyMapper.unmap()
-
-if g:FuzzyJump_AutoStart
-  call s:KeyMapper.map()
-endif
-
-" vim: set fdm=marker:
+" __END__  "{{{1
+" vim: foldmethod=marker
